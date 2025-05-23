@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - A Heartfelt Apology</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #ffcee4, #ffffff);
+            font-family: 'Arial', sans-serif;
+            color: #880e4f; /* Dark pink text */
+            line-height: 1.6;
+        }
+    
+        .container {
+            max-width: 800px;
+            text-align: center;
+            padding: 20px;
+        }
+    
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: #d81b60; /* Hot pink headings */
+        }
+    
+        p {
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            color: #880e4f; /* Dark pink paragraph */
+        }
+    
+        .back-button, .action-button {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background-color: #d81b60; /* Hot pink button background */
+            border: 2px solid #f48fb1; /* lighter pink border */
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 5px;
+            text-decoration: none;
+            margin: 10px;
+        }
+    
+        .back-button:hover, .action-button:hover {
+            background-color: white;
+            color: #d81b60;
+            border-color: #d81b60;
+        }
+    
+        .voice-section {
+            margin-top: 50px;
+            padding: 20px;
+            border-top: 1px solid #f48fb1; /* soft pink border */
+        }
+    
+        #transcription {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8bbd0; /* pastel pink background */
+            border-radius: 5px;
+            min-height: 100px;
+            width: 100%;
+            box-sizing: border-box;
+            color: #880e4f; /* dark pink text */
+        }
+    
+        .recording-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #ff4081; /* bright pink */
+            display: none;
+            margin: 10px auto;
+            animation: pulse 1.5s infinite;
+        }
+    
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    
+        .status-message {
+            margin-top: 15px;
+            font-style: italic;
+            color: rgba(136, 14, 79, 0.8); /* semi-transparent dark pink */
+        }
+    
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+    
+        .alert.success {
+            background-color: rgba(232, 30, 99, 0.2);
+            border: 1px solid rgba(232, 30, 99, 0.4);
+            color: #f48fb1;
+        }
+    
+        .alert.error {
+            background-color: rgba(220, 53, 69, 0.2);
+            border: 1px solid rgba(220, 53, 69, 0.4);
+            color: #ff9898;
+        }
+    
+        .alert.show {
+            opacity: 1;
+        }
+    
+        /* Mobile-friendly adjustments */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+    
+            .container {
+                max-width: 100%;
+                padding: 15px;
+            }
+    
+            h1 {
+                font-size: 2em;
+                margin-bottom: 20px;
+            }
+    
+            p {
+                font-size: 1em;
+                margin-bottom: 30px;
+            }
+    
+            .back-button, .action-button {
+                padding: 12px 20px;
+                font-size: 1em;
+                margin: 8px 5px;
+            }
+    
+            #transcription {
+                min-height: 80px;
+                font-size: 1em;
+                padding: 12px;
+            }
+    
+            .button-group {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
+    
+            .recording-indicator {
+                width: 16px;
+                height: 16px;
+                margin: 8px auto;
+            }
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <h1>A Heartfelt Apology</h1>
+        <p>
+            This website is a deeply personal project, created as an expression of my feelings for Diya. 
+            It represents our journey together - the ups and downs, the moments of joy and pain, 
+            and most importantly, my sincere desire to make things right. Every word here comes from 
+            the depths of my heart, hoping to convey the genuine remorse and love I feel.
+        </p>
+        <a href="Apology.html" class="back-button">Back</a>
+
+        <div class="voice-section">
+            <h2>Speak Your Heart</h2>
+            <div class="recording-indicator" id="recordingIndicator"></div>
+            <div id="transcription"></div>
+            <div class="alert" id="alertBox"></div>
+            <div class="button-group">
+                <button class="action-button" id="startRecording">Start Speaking</button>
+                <button class="action-button" id="sendMessage" style="display: none;">Send Message</button>
+            </div>
+            <div class="status-message" id="statusMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize EmailJS with your public key
+        (function() {
+            emailjs.init("6IiZu_KGdSXs1kcck");
+        })();
+
+        let recognition = null;
+        const startRecordingBtn = document.getElementById('startRecording');
+        const sendMessageBtn = document.getElementById('sendMessage');
+        const transcriptionDiv = document.getElementById('transcription');
+        const recordingIndicator = document.getElementById('recordingIndicator');
+        const statusMessage = document.getElementById('statusMessage');
+        const alertBox = document.getElementById('alertBox');
+        let isRecording = false;
+        let finalTranscript = '';
+
+        function showAlert(message, type) {
+            alertBox.textContent = message;
+            alertBox.className = `alert ${type}`;
+            // Force reflow
+            alertBox.offsetHeight;
+            alertBox.classList.add('show');
+            
+            // Hide alert after 5 seconds
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 5000);
+        }
+
+        // Initialize speech recognition
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => {
+                isRecording = true;
+                finalTranscript = transcriptionDiv.textContent || ''; // Preserve existing content
+                startRecordingBtn.textContent = 'Stop Speaking';
+                recordingIndicator.style.display = 'block';
+                statusMessage.textContent = 'Listening... Speak your heart out';
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                
+                // Loop through all results, including interim ones
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    
+                    if (event.results[i].isFinal) {
+                        finalTranscript += ' ' + transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                // Display both final and interim results
+                transcriptionDiv.innerHTML = 
+                    finalTranscript + 
+                    '<span style="color: rgba(255, 255, 255, 0.5);">' + 
+                    interimTranscript + 
+                    '</span>';
+                
+                // Show send button if we have some final transcript
+                if (finalTranscript.trim()) {
+                    sendMessageBtn.style.display = 'inline-block';
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                if (event.error === 'no-speech') {
+                    statusMessage.textContent = 'No speech detected. Still listening...';
+                } else {
+                    statusMessage.textContent = 'Error: ' + event.error;
+                    stopRecording();
+                }
+            };
+
+            recognition.onend = () => {
+                // Only stop if we're not supposed to be recording
+                if (isRecording) {
+                    // Restart recognition if it ended unexpectedly
+                    try {
+                        recognition.start();
+                        statusMessage.textContent = 'Restarted listening...';
+                    } catch (e) {
+                        console.error('Could not restart recognition:', e);
+                        stopRecording();
+                    }
+                } else {
+                    recordingIndicator.style.display = 'none';
+                    startRecordingBtn.textContent = 'Start Speaking';
+                    statusMessage.textContent = 'Recording stopped.';
+                }
+            };
+        } else {
+            startRecordingBtn.disabled = true;
+            statusMessage.textContent = 'Speech recognition is not supported in this browser.';
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            startRecordingBtn.textContent = 'Start Speaking';
+            recordingIndicator.style.display = 'none';
+            if (recognition) {
+                recognition.stop();
+            }
+            // Clean up any interim results and show only final transcript
+            if (transcriptionDiv.textContent.trim()) {
+                transcriptionDiv.textContent = finalTranscript.trim();
+            }
+        }
+
+        startRecordingBtn.addEventListener('click', () => {
+            if (!isRecording) {
+                finalTranscript = ''; // Clear previous transcript when starting new recording
+                transcriptionDiv.textContent = '';
+                sendMessageBtn.style.display = 'none';
+                recognition.start();
+            } else {
+                stopRecording();
+            }
+        });
+
+        sendMessageBtn.addEventListener('click', async () => {
+            const message = transcriptionDiv.textContent.trim();
+            if (!message) {
+                showAlert('Please record a message first.', 'error');
+                return;
+            }
+
+            // Disable the send button while sending
+            sendMessageBtn.disabled = true;
+            statusMessage.textContent = 'Sending message...';
+
+            try {
+                // Send email using EmailJS
+                await emailjs.send(
+                    "service_gvktc0r",
+                    "template_1oga7g5",
+                    {
+                        message: message,
+                        from_name: "Voice Message",
+                        to_name: "Diya",
+                    }
+                );
+                
+                transcriptionDiv.innerHTML = `
+                    <div style="font-size: 1.5em; margin-bottom: 10px;">💌 Thanks, Diya ❤️</div>
+                    <p style="font-size: 1.1em;">
+                        Your words mean the world to me. Every message you share brings us a step closer,
+                        and I truly value the trust you're showing by opening your heart.
+                    </p>
+                `;
+                
+                finalTranscript = '';
+                sendMessageBtn.style.display = 'none';
+                statusMessage.textContent = '';
+            } catch (error) {
+                console.error("EmailJS Error:", error);
+                showAlert('Failed to send message. Please try again.', 'error');
+                statusMessage.textContent = '';
+            } finally {
+                sendMessageBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html> 
